@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# MongoDB Atlas connection string
+MONGODB_URI="mongodb+srv://<username>:<password>@cluster0.turhpsl.mongodb.net/"
+
+# AWS S3 bucket name
+BUCKET_NAME="mongodb-onlinebookstore-dailybackup"
+
+# Directory to store backups temporarily
+BACKUP_DIR="/home/mongodb_backup"
+
+# Create a timestamp for the backup file
+TIMESTAMP=$(date +%Y-%m-%d)
+
+# Create a directory to store backups
+mkdir -p $BACKUP_DIR
+
+# Backup MongoDB collections to a dump directory
+mongodump --uri="$MONGODB_URI" --out=$BACKUP_DIR
+
+# Create a tar archive of the dump directory
+tar -czf $BACKUP_DIR/$TIMESTAMP-onlinebookstore-backup.tar.gz -C $BACKUP_DIR .
+
+# Upload the tar archive to S3
+aws s3 cp $BACKUP_DIR/$TIMESTAMP-onlinebookstore-backup.tar.gz s3://$BUCKET_NAME/
+
+# Publish SNS notification upon successful backup completion
+aws sns publish --topic-arn "arn:aws:sns:us-east-1:857844075538:backup_notification" --message "MongoDB backup completed successfully. Backup file: $TIMESTAMP-onlinebookstore-backup.tar.gz"
+
+# Clean up temporary backup directory
+rm -rf $BACKUP_DIR
