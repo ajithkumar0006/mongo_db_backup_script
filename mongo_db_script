@@ -1,3 +1,10 @@
+#need to install Mongodb tools
+#install and configure AWS CLI
+#create s3 bucket
+#create sns topic and verify
+#finally run the below script and add the cron job for daily backup
+
+
 #!/bin/bash
 
 # MongoDB Atlas connection string
